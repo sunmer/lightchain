@@ -1,5 +1,3 @@
-let blockChain = new BlockChain(new Block());
-
 let address1 = new Address("address 1", 1);
 let address2 = new Address("address 2", 2);
 
@@ -9,13 +7,10 @@ let transactions = [
 ];
 
 let network = new Network([
-  new Miner("miner 1", blockChain, transactions),
-  new Miner("miner 2", blockChain, transactions),
-  new Miner("miner 3", blockChain, transactions)
+  new Miner("miner 1", new BlockChain(new Block()), transactions),
+  new Miner("miner 2", new BlockChain(new Block()), transactions),
+  new Miner("miner 3", new BlockChain(new Block()), transactions),
+  new Miner("miner 4", new BlockChain(new Block()), transactions)
 ]);
 
-network.mineNextBlock(() => {
-  console.log(newBlock);
-  console.log(blockChain.getAddressBalance(address1));
-  console.log(blockChain.getAddressBalance(address2));
-});
+network.mineNextBlock();

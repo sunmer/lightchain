@@ -42,8 +42,7 @@ class Miner {
   }
 
   mineBlock(callback) {
-    let minerWorker = operative(function(args, cb) {
-      const newBlock = args[0];
+    let minerWorker = operative(function(newBlock) {
       newBlock.transactions = JSON.parse(JSON.stringify(newBlock.transactions));
       
       while (newBlock.hash.substring(0, newBlock.difficulty) !== Array(newBlock.difficulty + 1).join("0")) {
@@ -51,7 +50,7 @@ class Miner {
         newBlock.hash = md5(newBlock.previousHash + newBlock.timestamp + JSON.stringify(newBlock.transactions) + newBlock.nonce);
       }
       
-      cb(newBlock);
+      this.deferred().fulfill(newBlock);
     }, ["https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.10.0/js/md5.min.js"]);
     
     let newBlock = new Block(
@@ -60,9 +59,7 @@ class Miner {
       this.transactions
     );
 
-    minerWorker([newBlock], newBlock => {
-      callback(newBlock);
-    });
+    minerWorker(newBlock).then(newBlock => callback(newBlock));
   }
 
   isValidNewBlock(newBlock) {
@@ -83,19 +80,21 @@ class BlockChain {
   }
 
   getAddressBalance(address) {
+    let balance = address.balance;
+
     for(let i = 0; i < this.blocks.length; i++) {
       let transactions = this.blocks[i].transactions;
       for(let y = 0; y < transactions.length; y++) {
         let transaction = transactions[y];
         if(transaction.from.address === address.address) {
-          address.balance = address.balance - transaction.amount;
+          balance = balance - transaction.amount;
         } else if(transaction.to.address === address.address) {
-          address.balance = address.balance + transaction.amount;
+          balance = balance + transaction.amount;
         }
       }
     }
 
-    return address;
+    return balance;
   }
 
 }
@@ -119,30 +118,30 @@ class Network {
     let hasBlockBeenMined = false;
   
     newBlock = new Block(
-      newBlock.previousHash, 
-      newBlock.timestamp, 
-      newBlock.transactions, 
-      newBlock.nonce, 
+      newBlock.previousHash,
+      newBlock.timestamp,
+      newBlock.transactions,
+      newBlock.nonce,
       newBlock.hash
     );
   
-    for(let y = 0; y < network.miners.length; y++) {
-      if(network.miners[y].isValidNewBlock(newBlock)) {
+    for(let i = 0; i < network.miners.length; i++) {
+      if(network.miners[i].isValidNewBlock(newBlock)) {
         isValidNewBlock = true;
       }
     }
   
     if(isValidNewBlock && !hasBlockBeenMined) {
-      blockChain.blocks.push(newBlock);
-  
+      hasBlockBeenMined = true;
+
       for(let i = 0; i < network.miners.length; i++) {
-        network.miners[i].blockChain = blockChain;
+        network.miners[i].blockChain.blocks.push(newBlock);
+        network.miners[i].transactions = [];
       }
   
-      hasBlockBeenMined = true;
       console.log(newBlock);
-      console.log(blockChain.getAddressBalance(address1));
-      console.log(blockChain.getAddressBalance(address2));
+      console.log(network.miners[0].blockChain.getAddressBalance(address1));
+      console.log(network.miners[3].blockChain.getAddressBalance(address2));
     }
   }
 
