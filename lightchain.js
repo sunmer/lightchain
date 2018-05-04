@@ -43,7 +43,7 @@ class Miner {
         newBlock.nonce++;
         newBlock.hash = md5(newBlock.previousHash + newBlock.timestamp + JSON.stringify(newBlock.transactions) + newBlock.nonce);
       }
-
+      
       cb(newBlock);
     }, ["https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.10.0/js/md5.min.js"]);
     
@@ -91,4 +91,20 @@ class BlockChain {
     return address;
   }
 
+}
+
+class Network {
+  constructor(miners = [], mempool = []) {
+    this.miners = miners;
+    this.mempool = mempool;
+  }
+
+  mineNextBlock(callback) {
+    for(let i = 0; i < this.miners.length; i++) {
+      let miner = this.miners[i];
+      console.log(miner.name + " is mining");
+    
+      miner.mineBlock(this.mempool, callback);
+    }
+  }
 }
