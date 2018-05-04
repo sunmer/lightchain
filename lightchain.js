@@ -1,5 +1,11 @@
 class Block {
-  constructor(previousHash, timestamp, transactions = [], nonce = 0, hash = undefined, difficulty = 4) {
+  constructor(
+    previousHash = 0,
+    timestamp = new Date().getTime(),
+    transactions = [],
+    nonce = 0,
+    hash = undefined,
+    difficulty = 4) {
     this.previousHash = previousHash;
     this.timestamp = timestamp;
     this.hash = hash || this.calculateHash();
@@ -29,12 +35,13 @@ class Transaction {
 }
 
 class Miner {
-  constructor(name, blockChain) {
+  constructor(name, blockChain, transactions) {
     this.name = name;
     this.blockChain = blockChain;
+    this.transactions = transactions;
   }
 
-  mineBlock(transactions, callback) {
+  mineBlock(callback) {
     let minerWorker = operative(function(args, cb) {
       const newBlock = args[0];
       newBlock.transactions = JSON.parse(JSON.stringify(newBlock.transactions));
@@ -50,7 +57,7 @@ class Miner {
     let newBlock = new Block(
       this.blockChain.getLatestBlock().hash,
       new Date().getTime(),
-      transactions
+      this.transactions
     );
 
     minerWorker([newBlock], newBlock => {
@@ -94,17 +101,49 @@ class BlockChain {
 }
 
 class Network {
-  constructor(miners = [], mempool = []) {
+  constructor(miners = []) {
     this.miners = miners;
-    this.mempool = mempool;
   }
 
-  mineNextBlock(callback) {
+  mineNextBlock() {
     for(let i = 0; i < this.miners.length; i++) {
       let miner = this.miners[i];
       console.log(miner.name + " is mining");
     
-      miner.mineBlock(this.mempool, callback);
+      miner.mineBlock(this.broadcastToNetwork);
     }
   }
+
+  broadcastToNetwork(newBlock) {
+    let isValidNewBlock = false;
+    let hasBlockBeenMined = false;
+  
+    newBlock = new Block(
+      newBlock.previousHash, 
+      newBlock.timestamp, 
+      newBlock.transactions, 
+      newBlock.nonce, 
+      newBlock.hash
+    );
+  
+    for(let y = 0; y < network.miners.length; y++) {
+      if(network.miners[y].isValidNewBlock(newBlock)) {
+        isValidNewBlock = true;
+      }
+    }
+  
+    if(isValidNewBlock && !hasBlockBeenMined) {
+      blockChain.blocks.push(newBlock);
+  
+      for(let i = 0; i < network.miners.length; i++) {
+        network.miners[i].blockChain = blockChain;
+      }
+  
+      hasBlockBeenMined = true;
+      console.log(newBlock);
+      console.log(blockChain.getAddressBalance(address1));
+      console.log(blockChain.getAddressBalance(address2));
+    }
+  }
+
 }
