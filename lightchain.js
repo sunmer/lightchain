@@ -33,7 +33,7 @@ class Miner {
     this.blockChain = blockChain;
   }
 
-  mineBlock(transactions, blockChain, callback) {
+  mineBlock(transactions, callback) {
     let minerWorker = operative(function(args, cb) {
       const newBlock = args[0];
       const difficulty = args[1];
@@ -47,18 +47,19 @@ class Miner {
     }, ["https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.10.0/js/md5.min.js"]);
     
     let newBlock = new Block(
-      blockChain.getLatestBlock().hash,
+      this.blockChain.getLatestBlock().hash,
       new Date().getTime(),
       transactions
     );
 
-    minerWorker([newBlock, blockChain.miningDifficulty], function(newBlock) {
+    minerWorker([newBlock, this.blockChain.miningDifficulty], function(newBlock) {
       callback(newBlock);
     });
   }
 
   isValidNewBlock(newBlock) {
-    return newBlock.previousHash === this.blockChain.getLatestBlock().hash;
+    return newBlock.previousHash === this.blockChain.getLatestBlock().hash && 
+      newBlock.hash === newBlock.calculateHash();
   }
 
   addBlock(newBlock, minerName) {

@@ -1,4 +1,4 @@
-const blockChain = new BlockChain(new Block("0", new Date().getTime()), 4);
+const blockChain = new BlockChain(new Block("0", new Date().getTime()), 5);
 
 let miners = [
   new Miner("miner 1", blockChain),
@@ -22,7 +22,6 @@ for(let i = 0; i < miners.length; i++) {
 
   miner.mineBlock(
     transactions, 
-    blockChain,
     function(newBlock) {
       newBlock = new Block(
         newBlock.previousHash, 
