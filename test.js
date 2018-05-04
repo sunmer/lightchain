@@ -1,4 +1,4 @@
-const blockChain = new BlockChain(new Block("0", new Date().getTime()), 5);
+let blockChain = new BlockChain(new Block(new Block("0", new Date().getTime())));
 
 let miners = [
   new Miner("miner 1", blockChain),

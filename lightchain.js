@@ -1,10 +1,11 @@
 class Block {
-  constructor(previousHash, timestamp, transactions = [], nonce = 0, hash = undefined) {
+  constructor(previousHash, timestamp, transactions = [], nonce = 0, hash = undefined, difficulty = 4) {
     this.previousHash = previousHash;
     this.timestamp = timestamp;
     this.hash = hash || this.calculateHash();
     this.nonce = nonce;
     this.transactions = transactions;
+    this.difficulty = difficulty;
   }
 
   calculateHash() {
@@ -36,9 +37,8 @@ class Miner {
   mineBlock(transactions, callback) {
     let minerWorker = operative(function(args, cb) {
       const newBlock = args[0];
-      const difficulty = args[1];
       
-      while (newBlock.hash.substring(0, difficulty) !== Array(difficulty + 1).join("0")) {
+      while (newBlock.hash.substring(0, newBlock.difficulty) !== Array(newBlock.difficulty + 1).join("0")) {
         newBlock.nonce++;
         newBlock.hash = md5(newBlock.previousHash + newBlock.timestamp + JSON.stringify(newBlock.transactions) + newBlock.nonce);
       }
@@ -52,7 +52,8 @@ class Miner {
       transactions
     );
 
-    minerWorker([newBlock, this.blockChain.miningDifficulty], function(newBlock) {
+    minerWorker([newBlock], newBlock => {
+      // this.blockChain.blocks.push(newBlock);
       callback(newBlock);
     });
   }
@@ -62,21 +63,12 @@ class Miner {
       newBlock.hash === newBlock.calculateHash();
   }
 
-  addBlock(newBlock, minerName) {
-    const latestBlock = this.blockChain.getLatestBlock();
-    if(this.isValidNewBlock(latestBlock, newBlock)) {
-      newBlock.minerName = minerName;
-      this.blockChain.blocks.push(newBlock);
-    }
-  }
-
 }
 
 class BlockChain {
 
-  constructor(genesisBlock, miningDifficulty) {
+  constructor(genesisBlock) {
     this.blocks = [genesisBlock];
-    this.miningDifficulty = miningDifficulty;
   }
 
   getLatestBlock() {
