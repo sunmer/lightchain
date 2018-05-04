@@ -37,12 +37,13 @@ class Miner {
   mineBlock(transactions, callback) {
     let minerWorker = operative(function(args, cb) {
       const newBlock = args[0];
+      newBlock.transactions = JSON.parse(JSON.stringify(newBlock.transactions));
       
       while (newBlock.hash.substring(0, newBlock.difficulty) !== Array(newBlock.difficulty + 1).join("0")) {
         newBlock.nonce++;
         newBlock.hash = md5(newBlock.previousHash + newBlock.timestamp + JSON.stringify(newBlock.transactions) + newBlock.nonce);
       }
-      
+
       cb(newBlock);
     }, ["https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.10.0/js/md5.min.js"]);
     
@@ -53,7 +54,6 @@ class Miner {
     );
 
     minerWorker([newBlock], newBlock => {
-      // this.blockChain.blocks.push(newBlock);
       callback(newBlock);
     });
   }
@@ -73,6 +73,22 @@ class BlockChain {
 
   getLatestBlock() {
     return this.blocks[this.blocks.length - 1];
+  }
+
+  getAddressBalance(address) {
+    for(let i = 0; i < this.blocks.length; i++) {
+      let transactions = this.blocks[i].transactions;
+      for(let y = 0; y < transactions.length; y++) {
+        let transaction = transactions[y];
+        if(transaction.from.address === address.address) {
+          address.balance = address.balance - transaction.amount;
+        } else if(transaction.to.address === address.address) {
+          address.balance = address.balance + transaction.amount;
+        }
+      }
+    }
+
+    return address;
   }
 
 }

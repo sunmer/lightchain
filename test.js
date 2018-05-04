@@ -5,12 +5,12 @@ let miners = [
   new Miner("miner 2", blockChain)
 ];
 
-const address1 = new Address("address 1", 4);
-const address2 = new Address("address 2", 6);
+let address1 = new Address("address 1", 1);
+let address2 = new Address("address 2", 2);
 
 let transactions = [
-  new Transaction(address1, address2, 3),
-  new Transaction(address2, address1, 4)
+  new Transaction(address1, address2, 1),
+  new Transaction(address2, address1, 2)
 ];
 
 let isValidNewBlock = false;
@@ -39,15 +39,6 @@ function broadcastToNetwork(newBlock) {
   }
 
   if(isValidNewBlock && !hasBlockBeenMined) {
-    let transactionsToMake = newBlock.transactions;
-    newBlock.transactions = JSON.parse(JSON.stringify(newBlock.transactions));
-
-    for(let i = 0; i < transactionsToMake.length; i++) {
-      let transaction = transactionsToMake[i];
-      transaction.from.balance = transaction.from.balance - transaction.amount;
-      transaction.to.balance = transaction.to.balance + transaction.amount;
-    }
-    
     blockChain.blocks.push(newBlock);
 
     for(let i = 0; i < miners.length; i++) {
@@ -56,5 +47,7 @@ function broadcastToNetwork(newBlock) {
 
     hasBlockBeenMined = true;
     console.log(newBlock);
+    console.log(blockChain.getAddressBalance(address1));
+    console.log(blockChain.getAddressBalance(address2));
   }
 }
