@@ -15,7 +15,7 @@ class Block {
   }
 
   calculateHash() {
-    return sha256(JSON.stringify(this.previousHash + this.timestamp + JSON.stringify(this.transactions) + this.nonce));
+    return sha256(JSON.stringify(this.previousHash + this.timestamp + JSON.stringify(this.transactions) + this.nonce + this.difficulty));
   }
 }
 
@@ -46,7 +46,7 @@ class Miner {
       
       while (newBlock.hash.substring(0, newBlock.difficulty) !== Array(newBlock.difficulty + 1).join("0")) {
         newBlock.nonce++;
-        newBlock.hash = sha256(JSON.stringify(newBlock.previousHash + newBlock.timestamp + JSON.stringify(newBlock.transactions) + newBlock.nonce));
+        newBlock.hash = sha256(JSON.stringify(newBlock.previousHash + newBlock.timestamp + JSON.stringify(newBlock.transactions) + newBlock.nonce + newBlock.difficulty));
       }
       
       this.deferred().fulfill(newBlock);
