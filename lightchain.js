@@ -99,9 +99,8 @@ class BlockChain {
 }
 
 class Network {
-  constructor(miners = [], transactions = []) {
+  constructor(miners = []) {
     this.miners = miners;
-    this.transactions = transactions;
   }
 
   mineNextBlock(transactions, callback) {
