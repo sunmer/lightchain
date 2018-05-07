@@ -1,4 +1,4 @@
-# lightchain
+# Lightchain
 A simple client-side blockchain POC which shows core concepts such as:
 * Miners
 * Transactions
