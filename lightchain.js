@@ -15,7 +15,7 @@ class Block {
   }
 
   calculateHash() {
-    return md5(this.previousHash + this.timestamp + JSON.stringify(this.transactions) + this.nonce);
+    return sha256(JSON.stringify(this.previousHash + this.timestamp + JSON.stringify(this.transactions) + this.nonce));
   }
 }
 
@@ -35,28 +35,27 @@ class Transaction {
 }
 
 class Miner {
-  constructor(name, blockChain, transactions) {
+  constructor(name, blockChain) {
     this.name = name;
     this.blockChain = blockChain;
-    this.transactions = transactions;
   }
 
-  mineBlock(callback) {
+  mineBlock(transactions, callback) {
     let minerWorker = operative(function(newBlock) {
       newBlock.transactions = JSON.parse(JSON.stringify(newBlock.transactions));
       
       while (newBlock.hash.substring(0, newBlock.difficulty) !== Array(newBlock.difficulty + 1).join("0")) {
         newBlock.nonce++;
-        newBlock.hash = md5(newBlock.previousHash + newBlock.timestamp + JSON.stringify(newBlock.transactions) + newBlock.nonce);
+        newBlock.hash = sha256(JSON.stringify(newBlock.previousHash + newBlock.timestamp + JSON.stringify(newBlock.transactions) + newBlock.nonce));
       }
       
       this.deferred().fulfill(newBlock);
-    }, ["https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.10.0/js/md5.min.js"]);
+    }, ["https://cdnjs.cloudflare.com/ajax/libs/js-sha256/0.9.0/sha256.min.js"]);
     
     let newBlock = new Block(
       this.blockChain.getLatestBlock().hash,
       new Date().getTime(),
-      this.transactions
+      transactions
     );
 
     minerWorker(newBlock).then(newBlock => callback(newBlock));
@@ -71,8 +70,8 @@ class Miner {
 
 class BlockChain {
 
-  constructor(genesisBlock) {
-    this.blocks = [genesisBlock];
+  constructor(blocks) {
+    this.blocks = blocks;
   }
 
   getLatestBlock() {
@@ -100,20 +99,23 @@ class BlockChain {
 }
 
 class Network {
-  constructor(miners = []) {
+  constructor(miners = [], transactions = []) {
     this.miners = miners;
+    this.transactions = transactions;
   }
 
-  mineNextBlock() {
+  mineNextBlock(transactions, callback) {
     for(let i = 0; i < this.miners.length; i++) {
       let miner = this.miners[i];
       console.log(miner.name + " is mining");
-    
-      miner.mineBlock(this.broadcastToNetwork);
+
+      miner.mineBlock(transactions, (newBlock) => 
+        this.broadcastToNetwork(newBlock, () => callback())
+      );
     }
   }
 
-  broadcastToNetwork(newBlock) {
+  broadcastToNetwork(newBlock, callback) {
     let isValidNewBlock = false;
     let hasBlockBeenMined = false;
   
@@ -136,12 +138,9 @@ class Network {
 
       for(let i = 0; i < network.miners.length; i++) {
         network.miners[i].blockChain.blocks.push(newBlock);
-        network.miners[i].transactions = [];
       }
-  
-      console.log(newBlock);
-      console.log(network.miners[0].blockChain.getAddressBalance(address1));
-      console.log(network.miners[3].blockChain.getAddressBalance(address2));
+
+      callback();
     }
   }
 

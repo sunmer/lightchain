@@ -7,10 +7,10 @@ let transactions = [
 ];
 
 let network = new Network([
-  new Miner("miner 1", new BlockChain(new Block()), transactions),
-  new Miner("miner 2", new BlockChain(new Block()), transactions),
-  new Miner("miner 3", new BlockChain(new Block()), transactions),
-  new Miner("miner 4", new BlockChain(new Block()), transactions)
+  new Miner("miner 1", new BlockChain([new Block()])),
+  new Miner("miner 2", new BlockChain([new Block()])),
+  new Miner("miner 3", new BlockChain([new Block()])),
+  new Miner("miner 4", new BlockChain([new Block()]))
 ]);
 
-network.mineNextBlock();
+network.mineNextBlock(transactions, () => console.log(network));
